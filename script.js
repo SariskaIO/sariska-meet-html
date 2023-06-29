@@ -1,3 +1,8 @@
+let connection;
+let conference;
+let videoTrack;
+var startCallBtn = document.getElementById('startCallBtn');
+var endCallBtn = document.getElementById('endCallBtn');
 function generateRandomString() {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
     let result = '';
@@ -41,16 +46,22 @@ const getToken = async () => {
 }
 
 async function endCall(){
+    conference.leave();
+    connection.disconnect();
+
+    videoTrack.detach(document.getElementById("localVideo"));
     
+    startCallBtn.disabled = false;
+    endCallBtn.disabled = true;
 }
 
 async function startCall() {
 
-    var startCallBtn = document.getElementById('startCallBtn');
+    
     startCallBtn.disabled = true;
 
     // Enable end call button and screen share checkbox
-    var endCallBtn = document.getElementById('endCallBtn');
+
     endCallBtn.disabled = false;
     
     var screenShareCheckbox = document.getElementById('screenShareCheckbox');
@@ -66,7 +77,7 @@ async function startCall() {
 }
 
 function startConnection(token, roomname, localTracks) {
-    const connection = new SariskaMediaTransport.JitsiConnection(token, roomname, false);
+    connection = new SariskaMediaTransport.JitsiConnection(token, roomname, false);
 
     connection.addEventListener(
         SariskaMediaTransport.events.connection.CONNECTION_ESTABLISHED,
@@ -92,7 +103,7 @@ function startConnection(token, roomname, localTracks) {
 
 const createConference = async (connection, localTracks) => {
 
-    const conference = await connection.initJitsiConference();
+    conference = await connection.initJitsiConference();
 
     const remoteTracks = [];
 
@@ -139,7 +150,7 @@ async function setupLocalStream() {
 
     console.log("audioTrack", audioTrack);
 
-    const videoTrack = localTracks.find(track => track.getType() === "video");
+    videoTrack = localTracks.find(track => track.getType() === "video");
 
     videoTrack.attach(document.getElementById("localVideo"));
 
