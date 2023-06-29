@@ -68,3 +68,26 @@ body {
     color: #333;
   }
   
+  /* Rest of your existing styles */
+
+.input-container {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.input-container label {
+  margin-right: 5px;
+  color: #333;
+}
+
+.input-container input[type="text"] {
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #007bff;
+  border-radius: 4px;
+}
+
+.input-container input[type="text"]:focus {
+  outline: none;
+  border-color: #0056b3;
+}
