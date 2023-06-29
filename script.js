@@ -69,7 +69,7 @@ async function startCall() {
 
     SariskaMediaTransport.initialize();
     const token = await getToken();
-    roomname = document.getElementById('roomNameInput').value;
+    roomname = document.getElementById('roomNameInput').value || generateRandomString();
     console.log("Room Name", roomname);
 
     const localTracks = await setupLocalStream(token, roomname);

@@ -10,6 +10,7 @@
         <h1>Sariska Meet</h1>
 
         <video id="localVideo" autoplay></video>
+        <video id="screenShareVideo" autoplay></video>
         <video id="remoteVideo" autoplay></video>
         
         <br>
@@ -23,11 +24,6 @@
             <button id="startCallBtn" onclick="startCall()">Start Call</button>
             <button id="endCallBtn" onclick="endCall()" disabled>End Call</button>
             <button id="screenShareButton" onclick="toggleScreenSharing()" disabled>Screen Share</button>
-        </div>
-
-        <div id="screenShareCheckboxContainer">
-            <label for="screenShareCheckbox">Enable Screen Share:</label>
-            <input type="checkbox" id="screenShareCheckbox" disabled>
         </div>
     </div>
     <script src="script.js"></script>
