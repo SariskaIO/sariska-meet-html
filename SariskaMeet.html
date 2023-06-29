@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Sariska Meet HTML</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Sariska Meet</h1>
+
+        <video id="localVideo" autoplay></video>
+        <video id="remoteVideo" autoplay></video>
+
+        <div class="btn-container">
+            <button id="startCallBtn" onclick="startCall()">Start Call</button>
+            <button id="endCallBtn" onclick="endCall()" disabled>End Call</button>
+            <button id="screenShareButton" onclick="toggleScreenSharing()" disabled>Screen Share</button>
+        </div>
+
+        <div id="screenShareCheckboxContainer">
+            <label for="screenShareCheckbox">Enable Screen Share:</label>
+            <input type="checkbox" id="screenShareCheckbox" disabled>
+        </div>
+    </div>
+    <script src="script.js"></script>
+    <script src="https://sdk.sariska.io/bundle.messaging.js"></script>
+    <script type="text/javascript" src="https://sdk.sariska.io/umd/sariska-media-transport.min.js"></script>
+</body>
+
+</html>
