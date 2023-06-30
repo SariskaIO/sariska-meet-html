@@ -2,7 +2,8 @@ let connection;
 let conference;
 let videoTrack;
 let desktopTrack;
-var screenShareVideo = document.getElementById("screenShareVideo");
+
+const screenShareVideo = document.getElementById("screenShareVideo");
 const startCallBtn = document.getElementById('startCallBtn');
 const endCallBtn = document.getElementById('endCallBtn');
 const startScreenShareBtn = document.getElementById('screenShareButton');
@@ -60,14 +61,20 @@ const endCall = async () => {
   endCallBtn.disabled = true;
 };
 
-async function toggleScreenSharing() {
-  const optionsDesktop = {
-    devices: ["desktop"]
-  };
-  const desktopTrack = await SariskaMediaTransport.createLocalTracks(optionsDesktop);
-  desktopTrack[0].attach(document.getElementById("screenShareVideo"));
-  screenShareVideo.style.display = "block";
-}
+const toggleScreenSharing = async () => {
+  if (!desktopTrack) {
+    const optionsDesktop = {
+      devices: ["desktop"]
+    };
+    desktopTrack = await SariskaMediaTransport.createLocalTracks(optionsDesktop);
+    desktopTrack[0].attach(screenShareVideo);
+    screenShareVideo.style.display = "block";
+  } else {
+    desktopTrack[0].dispose();
+    desktopTrack = null;
+    screenShareVideo.style.display = "none";
+  }
+};
 
 const startCall = async () => {
   startCallBtn.disabled = true;
