@@ -81,18 +81,24 @@ const startCall = async () => {
   endCallBtn.disabled = false;
   startScreenShareBtn.disabled = false;
 
+  // Step 1
   SariskaMediaTransport.initialize();
   const token = await getToken();
   const roomName = document.getElementById('roomNameInput').value || "randomroom";
 
+  // Step 2
   const localTracks = await setupLocalStream(token, roomName);
   startConnection(token, roomName, localTracks);
 };
 
+// Step 3
 const startConnection = (token, roomName, localTracks) => {
+
+  // Step 3
   connection = new SariskaMediaTransport.JitsiConnection(token, roomName, false);
 
   connection.addEventListener(SariskaMediaTransport.events.connection.CONNECTION_ESTABLISHED, () => {
+    // Step 4
     createConference(connection, localTracks);
   });
 
@@ -110,6 +116,8 @@ const startConnection = (token, roomName, localTracks) => {
 };
 
 const createConference = async (connection, localTracks) => {
+
+  // Step 4
   conference = await connection.initJitsiConference();
 
   conference.addEventListener(SariskaMediaTransport.events.conference.CONFERENCE_JOINED, () => {
@@ -123,6 +131,7 @@ const createConference = async (connection, localTracks) => {
       return;
     }
     if (track.getType() === "video") {
+      // Step 5
       track.attach(document.getElementById("remoteVideo"));
     }
   });
@@ -140,6 +149,7 @@ const setupLocalStream = async () => {
     resolution: 240
   };
 
+  // Step 2
   const localTracks = await SariskaMediaTransport.createLocalTracks(options);
 
   const audioTrack = localTracks.find(track => track.getType() === "audio");
