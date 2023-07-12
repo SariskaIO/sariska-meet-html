@@ -12,6 +12,7 @@
         <video id="localVideo" autoplay></video>
         <video id="screenShareVideo" autoplay></video>
         <video id="remoteVideo" autoplay></video>
+        <audio id="audioElement" autoplay></audio>
         <br>
         <div class="input-container">
             <label for="roomNameInput">Room Name:</label>
@@ -22,6 +23,7 @@
             <button id="startCallBtn" onclick="startCall()">Start Call</button>
             <button id="endCallBtn" onclick="endCall()" disabled>End Call</button>
             <button id="screenShareButton" onclick="toggleScreenSharing()" disabled>Screen Share</button>
+            <button id="muteBtn" onclick="toggleMute()" disabled>Mute</button>
         </div>
     </div>
     <script src="script.js"></script>

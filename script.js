@@ -1,17 +1,19 @@
 let connection;
 let conference;
 let videoTrack;
+let audioTrack;
 let desktopTrack;
+let isMuted;
 
 const screenShareVideo = document.getElementById("screenShareVideo");
 const startCallBtn = document.getElementById('startCallBtn');
 const endCallBtn = document.getElementById('endCallBtn');
 const startScreenShareBtn = document.getElementById('screenShareButton');
+const muteBtn = document.getElementById('muteBtn');
 
 const generateRandomString = () => {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
   let result = '';
-
   for (let i = 0; i < 5; i++) {
     const randomIndex = Math.floor(Math.random() * characters.length);
     result += characters.charAt(randomIndex);
@@ -51,45 +53,9 @@ const getToken = async () => {
   }
 };
 
-const endCall = async () => {
-  conference.leave();
-  connection.disconnect();
-
-  videoTrack.detach(document.getElementById("localVideo"));
-
-  startCallBtn.disabled = false;
-  endCallBtn.disabled = true;
-};
-
-const toggleScreenSharing = async () => {
-  if (!desktopTrack) {
-    const optionsDesktop = {
-      devices: ["desktop"]
-    };
-    desktopTrack = await SariskaMediaTransport.createLocalTracks(optionsDesktop);
-    desktopTrack[0].attach(screenShareVideo);
-    screenShareVideo.style.display = "block";
-  } else {
-    desktopTrack[0].dispose();
-    desktopTrack = null;
-    screenShareVideo.style.display = "none";
-  }
-};
-
-const startCall = async () => {
-  startCallBtn.disabled = true;
-  endCallBtn.disabled = false;
-  startScreenShareBtn.disabled = false;
-
-  SariskaMediaTransport.initialize();
-  const token = await getToken();
-  const roomName = document.getElementById('roomNameInput').value || "randomroom";
-
-  const localTracks = await setupLocalStream(token, roomName);
-  startConnection(token, roomName, localTracks);
-};
 
 const startConnection = (token, roomName, localTracks) => {
+  //Step 1
   connection = new SariskaMediaTransport.JitsiConnection(token, roomName, false);
 
   connection.addEventListener(SariskaMediaTransport.events.connection.CONNECTION_ESTABLISHED, () => {
@@ -98,6 +64,8 @@ const startConnection = (token, roomName, localTracks) => {
 
   connection.addEventListener(SariskaMediaTransport.events.connection.CONNECTION_FAILED, (error) => {
     if (error === SariskaMediaTransport.events.connection.PASSWORD_REQUIRED) {
+      // token expired so have to set the token again
+      connection.setToken(token)  
       console.log('connection disconnect!!!', error);
     }
   });
@@ -110,6 +78,7 @@ const startConnection = (token, roomName, localTracks) => {
 };
 
 const createConference = async (connection, localTracks) => {
+  // Step 2
   conference = await connection.initJitsiConference();
 
   conference.addEventListener(SariskaMediaTransport.events.conference.CONFERENCE_JOINED, () => {
@@ -135,6 +104,7 @@ const createConference = async (connection, localTracks) => {
 };
 
 const setupLocalStream = async () => {
+  // step 3
   const options = {
     devices: ["audio", "video"],
     resolution: 240
@@ -142,10 +112,84 @@ const setupLocalStream = async () => {
 
   const localTracks = await SariskaMediaTransport.createLocalTracks(options);
 
-  const audioTrack = localTracks.find(track => track.getType() === "audio");
+  audioTrack = localTracks.find(track => track.getType() === "audio");
   videoTrack = localTracks.find(track => track.getType() === "video");
 
   videoTrack.attach(document.getElementById("localVideo"));
+  audioTrack.attach(document.getElementById("audioElement"))
 
   return localTracks;
 };
+
+
+const startCall = async () => {
+  startCallBtn.disabled = true;
+  endCallBtn.disabled = false;
+  startScreenShareBtn.disabled = false;
+  muteBtn.disabled = false;
+
+  SariskaMediaTransport.initialize();
+  const token = await getToken();
+  const roomName = document.getElementById('roomNameInput').value || "randomroom";
+
+  const localTracks = await setupLocalStream(token, roomName);
+  startConnection(token, roomName, localTracks);
+};
+
+const toggleScreenSharing = async () => {
+  if (!desktopTrack) {
+    const optionsDesktop = {
+      devices: ["desktop"]
+    };
+    desktopTrack = await SariskaMediaTransport.createLocalTracks(optionsDesktop);
+    desktopTrack[0].attach(screenShareVideo);
+    screenShareVideo.style.display = "block";
+  } else {
+    desktopTrack[0].dispose();
+    desktopTrack = null;
+    screenShareVideo.style.display = "none";
+  }
+};
+
+const endCall = async () => {
+  conference.leave();
+  connection.disconnect();
+
+  videoTrack.detach(document.getElementById("localVideo"));
+
+  startCallBtn.disabled = false;
+  endCallBtn.disabled = true;
+};
+
+const toggleMute = () =>{
+  if (isMuted){
+    unMuteAudio();
+  }
+  else{
+    muteAudio();
+  }
+}
+
+const muteAudio = () =>{
+  if(audioTrack){
+    audioTrack.mute();
+  }
+
+  isMuted = true;
+  muteBtn.textContent = "Unmute";
+}
+
+const unMuteAudio = () =>{
+ if(audioTrack){
+  audioTrack.unmute();
+ }
+
+ isMuted = false;
+ muteBtn.textContent = "mute";
+}
+
+
+
+// Bugs
+// cannot disable the viideo
+// Even after the call is ended the camera is still on
