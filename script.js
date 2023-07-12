@@ -4,12 +4,14 @@ let videoTrack;
 let audioTrack;
 let desktopTrack;
 let isMuted;
+let isVideoDisabled;
 
 const screenShareVideo = document.getElementById("screenShareVideo");
 const startCallBtn = document.getElementById('startCallBtn');
 const endCallBtn = document.getElementById('endCallBtn');
 const startScreenShareBtn = document.getElementById('screenShareButton');
 const muteBtn = document.getElementById('muteBtn');
+const videoBtn = document.getElementById('videoBtn');
 
 const generateRandomString = () => {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
@@ -127,6 +129,7 @@ const startCall = async () => {
   endCallBtn.disabled = false;
   startScreenShareBtn.disabled = false;
   muteBtn.disabled = false;
+  videoBtn.disabled = false;
 
   SariskaMediaTransport.initialize();
   const token = await getToken();
@@ -155,10 +158,15 @@ const endCall = async () => {
   conference.leave();
   connection.disconnect();
 
-  videoTrack.detach(document.getElementById("localVideo"));
-
+  // added dispose here instead of detach because with detach webcam was still onn even after the meet was ended.
+  videoTrack.dispose(document.getElementById("localVideo"));
+  audioTrack.detach(document.getElementById("audioElement"))
+  
   startCallBtn.disabled = false;
   endCallBtn.disabled = true;
+  startScreenShareBtn.disabled = true;
+  muteBtn.disabled = true;
+  videoBtn.disabled = true;
 };
 
 const toggleMute = () =>{
@@ -188,8 +196,35 @@ const unMuteAudio = () =>{
  muteBtn.textContent = "mute";
 }
 
+const toggleVideo = () =>{
+  if(isVideoDisabled){
+    enableVideo();
+  }
+  else{
+    disableVideo();
+  }
+}
+
+const enableVideo = () =>{
+  if(videoTrack){
+    videoTrack.attach(document.getElementById("localVideo"));
+  }
+  isVideoDisabled = false;
+  videoBtn.textContent = "Disable Video";
+  console.log("video enabled");
+}
+
+const disableVideo = () =>{
+  if(videoTrack){
+    videoTrack.detach(document.getElementById("localVideo"));
+  }
+  isVideoDisabled = true;
+  videoBtn.textContent = "Enable Video";
+  console.log("video disabled");
+}
 
 
 // Bugs
-// cannot disable the viideo
 // Even after the call is ended the camera is still on
+
+//fixed a bug where the screensharing button was still onn after the call was ended.
