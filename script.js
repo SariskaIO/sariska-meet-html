@@ -13,6 +13,13 @@ const startScreenShareBtn = document.getElementById('screenShareButton');
 const muteBtn = document.getElementById('muteBtn');
 const videoBtn = document.getElementById('videoBtn');
 
+// Messaging constants
+const messageBtn = document.getElementById('messageBtn');
+const messageContainer = document.getElementById('messageContainer');
+const messageInput = document.getElementById('messageInput');
+const sendMessageBtn = document.getElementById('sendMessageBtn');
+const messageDisplay = document.getElementById('messageDisplay');
+
 const generateRandomString = () => {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
   let result = '';
@@ -102,6 +109,25 @@ const createConference = async (connection, localTracks) => {
     track.detach(document.getElementById("remoteVideo"));
   });
 
+  conference.addEventListener(SariskaMediaTransport.events.conference.MESSAGE_RECEIVED, (participantId,message) => {
+    console.log("message received");
+    console.log(participantId,message);
+
+  const messageBubble = document.createElement('div');
+  messageBubble.classList.add('message-bubble');
+  messageBubble.innerHTML = `
+    <div class="message-info">
+      <span class="message-sender">Participant: ${participantId}</span>
+    </div>
+    <div class="message-content">${message}</div>
+  `;
+
+    messageDisplay.appendChild(messageBubble);
+
+    messageDisplay.scrollTop = messageDisplay.scrollHeight;
+  } 
+)
+
   conference.join();
 };
 
@@ -130,6 +156,7 @@ const startCall = async () => {
   startScreenShareBtn.disabled = false;
   muteBtn.disabled = false;
   videoBtn.disabled = false;
+  messageBtn.disabled = false;
 
   SariskaMediaTransport.initialize();
   const token = await getToken();
@@ -167,7 +194,10 @@ const endCall = async () => {
   startScreenShareBtn.disabled = true;
   muteBtn.disabled = true;
   videoBtn.disabled = true;
+  messageBtn.disabled = true;
 };
+
+// functions for mute button start
 
 const toggleMute = () =>{
   if (isMuted){
@@ -196,6 +226,10 @@ const unMuteAudio = () =>{
  muteBtn.textContent = "mute";
 }
 
+// functions for mute button end
+
+// functions for video start
+
 const toggleVideo = () =>{
   if(isVideoDisabled){
     enableVideo();
@@ -222,9 +256,32 @@ const disableVideo = () =>{
   videoBtn.textContent = "Enable Video";
   console.log("video disabled");
 }
+// functions for video end
+
+// Messaging function starts
+
+const toggleTextArea = () => {
+  if (messageContainer.style.display === 'none') {
+    messageContainer.style.display = 'inline';
+  } else {
+    messageContainer.style.display = 'none';
+  }
+};
 
 
-// Bugs
-// Even after the call is ended the camera is still on
 
-//fixed a bug where the screensharing button was still onn after the call was ended.
+const sendMessage = () => {
+  console.log("button clicked");
+  const message = messageInput.value;
+  if (message.trim() !== '') {
+    
+    conference.sendMessage(message); 
+
+    console.log(message);
+    messageInput.value = '';
+
+    
+
+  }
+};
+
