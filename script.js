@@ -5,6 +5,8 @@ let audioTrack;
 let desktopTrack;
 let isMuted;
 let isVideoDisabled;
+let socket;
+let channel;
 
 const screenShareVideo = document.getElementById("screenShareVideo");
 const startCallBtn = document.getElementById('startCallBtn');
@@ -62,6 +64,59 @@ const getToken = async () => {
   }
 };
 
+const createSocketConnection = () =>{
+    socket = new Socket("wss://api.sariska.io/api/v1/messaging/websocket", { token: getToken() });
+    socket.onOpen( () => console.log("connection open!") )
+    socket.onError( () => console.log("there was an error with the connection!") )
+    socket.onClose( () => console.log("the connection dropped") )
+
+
+    socket.connect()  
+    }
+
+const joinChatRoom = () =>{
+  const roomName = document.getElementById("roomNameInput").value;
+  channel = socket.channel(`chat:${roomName}`);
+
+  channel.on("new_message", (message) =>{
+    console.log(message);
+    const messageBubble = document.createElement('div');
+      messageBubble.classList.add('message-bubble');
+      messageBubble.innerHTML = `
+        <div class="message-info">
+          <span class="message-sender">Participant: ${message.name}</span>
+        </div>
+        <div class="message-content">${message.content}</div>
+      `;
+
+        messageDisplay.appendChild(messageBubble);
+
+        messageDisplay.scrollTop = messageDisplay.scrollHeight;
+  });
+  
+  channel.join()
+                .receive("ok", () => console.log("Channel Joined"))
+                .receive("error", () => console.log("Failed to join"))
+                .receive("timeout", () => console.log("Networking issue. Still waiting..."));
+}
+
+const leaveChatRoom = () => {
+  channel.leave();
+};
+
+const sendMessage = () => {
+  const message = messageInput.value;
+  if (message.trim() !== '') {
+      channel.push("new_message", {
+          content: message
+      })
+      .receive("ok", () => console.log("Message sent"))
+      .receive("error", () => console.log("Failed to send message"));
+       console.log(message);
+      messageInput.value = '';
+  }
+};
+
 
 const startConnection = (token, roomName, localTracks) => {
   //Step 1
@@ -109,24 +164,25 @@ const createConference = async (connection, localTracks) => {
     track.detach(document.getElementById("remoteVideo"));
   });
 
-  conference.addEventListener(SariskaMediaTransport.events.conference.MESSAGE_RECEIVED, (participantId,message) => {
-    console.log("message received");
-    console.log(participantId,message);
+  // Message received functionality by conference.receive
+//   conference.addEventListener(SariskaMediaTransport.events.conference.MESSAGE_RECEIVED, (participantId,message) => {
+//       console.log("message received");
+//       console.log(participantId,message);
 
-  const messageBubble = document.createElement('div');
-  messageBubble.classList.add('message-bubble');
-  messageBubble.innerHTML = `
-    <div class="message-info">
-      <span class="message-sender">Participant: ${participantId}</span>
-    </div>
-    <div class="message-content">${message}</div>
-  `;
+//       const messageBubble = document.createElement('div');
+//       messageBubble.classList.add('message-bubble');
+//       messageBubble.innerHTML = `
+//         <div class="message-info">
+//           <span class="message-sender">Participant: ${participantId}</span>
+//         </div>
+//         <div class="message-content">${message}</div>
+//       `;
 
-    messageDisplay.appendChild(messageBubble);
+//         messageDisplay.appendChild(messageBubble);
 
-    messageDisplay.scrollTop = messageDisplay.scrollHeight;
-  } 
-)
+//         messageDisplay.scrollTop = messageDisplay.scrollHeight;
+//   } 
+// )
 
   conference.join();
 };
@@ -269,19 +325,20 @@ const toggleTextArea = () => {
 };
 
 
-
-const sendMessage = () => {
-  console.log("button clicked");
-  const message = messageInput.value;
-  if (message.trim() !== '') {
+  // Message sending functionality by conference.sendMessage
+// const sendMessage = () => {
+//   console.log("button clicked");
+//   const message = messageInput.value;
+//   if (message.trim() !== '') {
     
-    conference.sendMessage(message); 
+//     conference.sendMessage(message); 
 
-    console.log(message);
-    messageInput.value = '';
+//     console.log(message);
+//     messageInput.value = '';
 
     
 
-  }
-};
+//   }
+// };
 
+// Message function ends
