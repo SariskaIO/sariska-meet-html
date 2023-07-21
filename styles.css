@@ -161,3 +161,9 @@ body {
   background-color: #ccc;
   cursor: not-allowed;
 }
+
+.live-stream-container {
+  display: none;
+  margin-top: 20px;
+  text-align: center;
+}

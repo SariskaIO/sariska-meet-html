@@ -69,61 +69,7 @@ const getToken = async (apiKey) => {
   }
 };
 
-const createSocketConnection = async () =>{
-    console.log(getToken());
-    let token = await getToken("229b02aabece4e42203ed0bb3df1b5916edc44bf82b530887bdeb8");
-    const params = {token};
-    socket = new Socket("wss://api.sariska.io/api/v1/messaging/websocket", {params});
-    socket.onOpen( () => console.log("connection open!") )
-    socket.onError( () => console.log("there was an error with the connection!") )
-    socket.onClose( () => console.log("the connection dropped") )
 
-
-    socket.connect()  
-    }
-
-const joinChatRoom = () =>{
-  roomName = document.getElementById("roomNameInput").value;
-  channel = socket.channel(`chat:${roomName}`);
-
-  channel.on("new_message", (message) =>{
-    console.log(message);
-    const messageBubble = document.createElement('div');
-      messageBubble.classList.add('message-bubble');
-      messageBubble.innerHTML = `
-        <div class="message-info">
-          <span class="message-sender">Participant: ${message.name}</span>
-        </div>
-        <div class="message-content">${message.content}</div>
-      `;
-
-        messageDisplay.appendChild(messageBubble);
-
-        messageDisplay.scrollTop = messageDisplay.scrollHeight;
-  });
-  
-  channel.join()
-                .receive("ok", () => console.log("Channel Joined"))
-                .receive("error", () => console.log("Failed to join"))
-                .receive("timeout", () => console.log("Networking issue. Still waiting..."));
-}
-
-const leaveChatRoom = () => {
-  channel.leave();
-};
-
-const sendMessage = () => {
-  const message = messageInput.value;
-  if (message.trim() !== '') {
-      channel.push("new_message", {
-          content: message
-      })
-      .receive("ok", () => console.log("Message sent"))
-      .receive("error", () => console.log("Failed to send message"));
-       console.log(message);
-      messageInput.value = '';
-  }
-};
 
 
 const startConnection = (token, roomName, localTracks) => {
@@ -172,26 +118,6 @@ const createConference = async (connection, localTracks) => {
     track.detach(document.getElementById("remoteVideo"));
   });
 
-  // Message received functionality by conference.receive
-//   conference.addEventListener(SariskaMediaTransport.events.conference.MESSAGE_RECEIVED, (participantId,message) => {
-//       console.log("message received");
-//       console.log(participantId,message);
-
-//       const messageBubble = document.createElement('div');
-//       messageBubble.classList.add('message-bubble');
-//       messageBubble.innerHTML = `
-//         <div class="message-info">
-//           <span class="message-sender">Participant: ${participantId}</span>
-//         </div>
-//         <div class="message-content">${message}</div>
-//       `;
-
-//         messageDisplay.appendChild(messageBubble);
-
-//         messageDisplay.scrollTop = messageDisplay.scrollHeight;
-//   } 
-// )
-
   conference.join();
 };
 
@@ -233,13 +159,15 @@ const startCall = async () => {
     console.log('Token not received from server');
     return;
   }
-  const roomName = document.getElementById('roomNameInput').value || "randomroom";
+  const roomName = document.getElementById('roomNameInput').value;
 
   if (!roomName) {
     alert("Please enter a room name.");
     startCallBtn.disabled = false; 
     endCallBtn.disabled = true; 
     startScreenShareBtn.disabled = true; 
+    muteBtn.disabled = true;
+    videoBtn.disabled = true;
     return;
 
   }
@@ -354,15 +282,8 @@ const disableVideo = () =>{
 }
 // functions for video end
 
-// Messaging function starts
 
-const toggleTextArea = () => {
-  if (messageContainer.style.display === 'none') {
-    messageContainer.style.display = 'inline';
-  } else {
-    messageContainer.style.display = 'none';
-  }
-};
+
 
 
   // Message sending functionality by conference.sendMessage
@@ -381,70 +302,30 @@ const toggleTextArea = () => {
 //   }
 // };
 
+
+// Message received functionality by conference.receive
+//   conference.addEventListener(SariskaMediaTransport.events.conference.MESSAGE_RECEIVED, (participantId,message) => {
+//       console.log("message received");
+//       console.log(participantId,message);
+
+//       const messageBubble = document.createElement('div');
+//       messageBubble.classList.add('message-bubble');
+//       messageBubble.innerHTML = `
+//         <div class="message-info">
+//           <span class="message-sender">Participant: ${participantId}</span>
+//         </div>
+//         <div class="message-content">${message}</div>
+//       `;
+
+//         messageDisplay.appendChild(messageBubble);
+
+//         messageDisplay.scrollTop = messageDisplay.scrollHeight;
+//   } 
+// )
+
 // Message function ends
 
 
 
-// Live Streaming
 
 
-const submitApiKey = () => {
-  const apiKeyInput = document.getElementById('apiKeyInput');
-  apiKey = apiKeyInput.value;
-  if (apiKey.trim() !== '') {
-      // Enable the "Go Live" button after the API key is submitted
-      console.log("API key submitted");
-      const goLiveBtn = document.getElementById('goLiveBtn');
-      goLiveBtn.disabled = false;
-  } else {
-      alert('Please enter a valid API key.');
-  }
-};
-
-
-const goLive = async () => {
-  if (!apiKey) {
-      alert('Please submit your API key first.');
-      return;
-  }
-  const token = await getToken(apiKey);
-  try {
-      const response = await fetch("https://api.sariska.io/terraform/v1/hooks/srs/startRecording", {
-          method: "POST",
-          headers: {
-              "Authorization": `Bearer ${token}`,
-              "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-              room_name: roomName,
-          })
-      });
-
-      if (response.ok) {
-          // Successfully started live streaming
-          const liveStreamingData = await response.json();
-          console.log("Live streaming started:", liveStreamingData);
-          showLiveStreamFrame(liveStreamingData); 
-      } else {
-          console.log("Failed to start live streaming:", response.status);
-      }
-  } catch (error) {
-      console.log("Error while starting live streaming:", error);
-  }
-};
-
-const showLiveStreamFrame = (liveStreamingData) => {
-  if(Hls.isSupported()){
-    const liveStreamContainer = document.querySelector('.live-stream-container');
-    const hls = new Hls();
-    hls.attachMedia(liveStreamContainer);
-				hls.on(Hls.Events.MEDIA_ATTACHED, () => {
-					hls.loadSource(
-						'https://customer-m033z5x00ks6nunl.cloudflarestream.com/b236bde30eb07b9d01318940e5fc3eda/manifest/video.m3u8'
-					);
-        });
-			}
-  liveStreamContainer.style.display = 'block';
-  liveStreamContainer.innerHTML = ''; 
-  liveStreamContainer.play();
-}
