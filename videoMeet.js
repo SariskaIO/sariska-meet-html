@@ -154,7 +154,7 @@ const startCall = async () => {
   messageBtn.disabled = false;
 
   SariskaMediaTransport.initialize();
-  const token = await getToken("249202aabed00b41363794b526eee6927bd35cbc9bac36cd3edcaa");
+  const token = await getToken("229b02aabece4e42203ed0bb3df1b5916edc44bf82b530887bdeb8");
   if (!token) {
     console.log('Token not received from server');
     return;
@@ -174,8 +174,8 @@ const startCall = async () => {
 
   const localTracks = await setupLocalStream(token, roomName);
   startConnection(token, roomName, localTracks);
-  createSocketConnection();
-  joinChatRoom();
+  // createSocketConnection();
+  // joinChatRoom();
 };
 
 const toggleScreenSharing = async () => {

@@ -13,7 +13,7 @@ const createSocketConnection = async () =>{
 
 const joinChatRoom = () =>{
   roomName = document.getElementById("roomNameInput").value;
-  channel = socket.channel(`chat:${roomName}`);
+  channel = Phoenix.socket.channel(`chat:${roomName}`);
 
   channel.on("new_message", (message) =>{
     console.log(message);
