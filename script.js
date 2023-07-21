@@ -7,7 +7,9 @@ let isMuted;
 let isVideoDisabled;
 let socket;
 let channel;
+let apiKey;
 
+let roomName;
 const screenShareVideo = document.getElementById("screenShareVideo");
 const startCallBtn = document.getElementById('startCallBtn');
 const endCallBtn = document.getElementById('endCallBtn');
@@ -24,23 +26,26 @@ const messageDisplay = document.getElementById('messageDisplay');
 
 const generateRandomString = () => {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+  const randomValues = new Uint32Array(5);
+  window.crypto.getRandomValues(randomValues);
   let result = '';
   for (let i = 0; i < 5; i++) {
-    const randomIndex = Math.floor(Math.random() * characters.length);
+    const randomIndex = randomValues[i] % characters.length;
     result += characters.charAt(randomIndex);
   }
 
   return result;
 };
 
-const getToken = async () => {
+const getToken = async (apiKey) => {
   const body = {
     method: "POST",
     headers: {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      apiKey: "249202aabed00b41363794b526eee6927bd35cbc9bac36cd3edcaa",
+      // apiKey: "249202aabed00b41363794b526eee6927bd35cbc9bac36cd3edcaa",
+      apiKey: apiKey,
       user: {
         id: generateRandomString(),
         name: generateRandomString(),
@@ -64,8 +69,11 @@ const getToken = async () => {
   }
 };
 
-const createSocketConnection = () =>{
-    socket = new Socket("wss://api.sariska.io/api/v1/messaging/websocket", { token: getToken() });
+const createSocketConnection = async () =>{
+    console.log(getToken());
+    let token = await getToken("229b02aabece4e42203ed0bb3df1b5916edc44bf82b530887bdeb8");
+    const params = {token};
+    socket = new Socket("wss://api.sariska.io/api/v1/messaging/websocket", {params});
     socket.onOpen( () => console.log("connection open!") )
     socket.onError( () => console.log("there was an error with the connection!") )
     socket.onClose( () => console.log("the connection dropped") )
@@ -75,7 +83,7 @@ const createSocketConnection = () =>{
     }
 
 const joinChatRoom = () =>{
-  const roomName = document.getElementById("roomNameInput").value;
+  roomName = document.getElementById("roomNameInput").value;
   channel = socket.channel(`chat:${roomName}`);
 
   channel.on("new_message", (message) =>{
@@ -196,6 +204,11 @@ const setupLocalStream = async () => {
 
   const localTracks = await SariskaMediaTransport.createLocalTracks(options);
 
+  if (!localTracks) {
+    console.log('Local tracks not created');
+    return;
+  }
+
   audioTrack = localTracks.find(track => track.getType() === "audio");
   videoTrack = localTracks.find(track => track.getType() === "video");
 
@@ -215,11 +228,26 @@ const startCall = async () => {
   messageBtn.disabled = false;
 
   SariskaMediaTransport.initialize();
-  const token = await getToken();
+  const token = await getToken("249202aabed00b41363794b526eee6927bd35cbc9bac36cd3edcaa");
+  if (!token) {
+    console.log('Token not received from server');
+    return;
+  }
   const roomName = document.getElementById('roomNameInput').value || "randomroom";
+
+  if (!roomName) {
+    alert("Please enter a room name.");
+    startCallBtn.disabled = false; 
+    endCallBtn.disabled = true; 
+    startScreenShareBtn.disabled = true; 
+    return;
+
+  }
 
   const localTracks = await setupLocalStream(token, roomName);
   startConnection(token, roomName, localTracks);
+  createSocketConnection();
+  joinChatRoom();
 };
 
 const toggleScreenSharing = async () => {
@@ -230,10 +258,12 @@ const toggleScreenSharing = async () => {
     desktopTrack = await SariskaMediaTransport.createLocalTracks(optionsDesktop);
     desktopTrack[0].attach(screenShareVideo);
     screenShareVideo.style.display = "block";
+    startScreenShareBtn.innerText = "Stop Sharing";
   } else {
     desktopTrack[0].dispose();
     desktopTrack = null;
     screenShareVideo.style.display = "none";
+    startScreenShareBtn.innerText = "Start Sharing";
   }
 };
 
@@ -243,7 +273,17 @@ const endCall = async () => {
 
   // added dispose here instead of detach because with detach webcam was still onn even after the meet was ended.
   videoTrack.dispose(document.getElementById("localVideo"));
-  audioTrack.detach(document.getElementById("audioElement"))
+  audioTrack.dispose(document.getElementById("audioElement"));
+
+  if (desktopTrack) {
+    desktopTrack[0].dispose();
+    desktopTrack = null;
+    screenShareVideo.style.display = "none";
+    startScreenShareBtn.innerText = "Start Sharing"; 
+  }
+
+  const roomNameInput = document.getElementById('roomNameInput');
+  roomNameInput.value = '';
   
   startCallBtn.disabled = false;
   endCallBtn.disabled = true;
@@ -342,3 +382,69 @@ const toggleTextArea = () => {
 // };
 
 // Message function ends
+
+
+
+// Live Streaming
+
+
+const submitApiKey = () => {
+  const apiKeyInput = document.getElementById('apiKeyInput');
+  apiKey = apiKeyInput.value;
+  if (apiKey.trim() !== '') {
+      // Enable the "Go Live" button after the API key is submitted
+      console.log("API key submitted");
+      const goLiveBtn = document.getElementById('goLiveBtn');
+      goLiveBtn.disabled = false;
+  } else {
+      alert('Please enter a valid API key.');
+  }
+};
+
+
+const goLive = async () => {
+  if (!apiKey) {
+      alert('Please submit your API key first.');
+      return;
+  }
+  const token = await getToken(apiKey);
+  try {
+      const response = await fetch("https://api.sariska.io/terraform/v1/hooks/srs/startRecording", {
+          method: "POST",
+          headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+              room_name: roomName,
+          })
+      });
+
+      if (response.ok) {
+          // Successfully started live streaming
+          const liveStreamingData = await response.json();
+          console.log("Live streaming started:", liveStreamingData);
+          showLiveStreamFrame(liveStreamingData); 
+      } else {
+          console.log("Failed to start live streaming:", response.status);
+      }
+  } catch (error) {
+      console.log("Error while starting live streaming:", error);
+  }
+};
+
+const showLiveStreamFrame = (liveStreamingData) => {
+  if(Hls.isSupported()){
+    const liveStreamContainer = document.querySelector('.live-stream-container');
+    const hls = new Hls();
+    hls.attachMedia(liveStreamContainer);
+				hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+					hls.loadSource(
+						'https://customer-m033z5x00ks6nunl.cloudflarestream.com/b236bde30eb07b9d01318940e5fc3eda/manifest/video.m3u8'
+					);
+        });
+			}
+  liveStreamContainer.style.display = 'block';
+  liveStreamContainer.innerHTML = ''; 
+  liveStreamContainer.play();
+}

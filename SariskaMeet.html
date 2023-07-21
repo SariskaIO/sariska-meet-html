@@ -6,7 +6,13 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    
     <div class="container">
+        <div class="api-key-container">
+            <label for="apiKeyInput">API Key:</label>
+            <input type="text" id="apiKeyInput" placeholder="Enter API key">
+            <button id="submitApiKeyBtn" onclick="submitApiKey()">Submit</button>
+        </div>
         <h1>Sariska Meet</h1>
 
         <video id="localVideo" autoplay></video>
@@ -26,6 +32,7 @@
             <button id="muteBtn" onclick="toggleMute()" disabled>Mute</button>
             <button id="videoBtn" onclick="toggleVideo()" disabled>Disable Video</button>
             <button id="messageBtn" onclick="toggleTextArea()" disabled>Message</button>
+            <button id="goLiveBtn" onclick="goLive()" disabled>Go Live</button>
         </div>
     </div>
     <div class="message-container" id="messageContainer" style="display: none;">
@@ -37,9 +44,14 @@
             <button id="sendMessageBtn" onclick="sendMessage()">Send</button>
         </div>
     </div>
-    <script src="script.js"></script>
+    <div class="live-stream-container" style="display: none;">
+
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/phoenix@1.7.7/priv/static/phoenix.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
     <script src="https://sdk.sariska.io/bundle.messaging.js"></script>
     <script type="text/javascript" src="https://sdk.sariska.io/umd/sariska-media-transport.min.js"></script>
+    <script src="script.js"></script>    
 </body>
 
 </html>
