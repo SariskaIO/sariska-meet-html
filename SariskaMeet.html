@@ -13,6 +13,12 @@
             <input type="text" id="apiKeyInput" placeholder="Enter API key">
             <button id="submitApiKeyBtn" onclick="submitApiKey()">Submit</button>
         </div>
+        <br>
+        <div class="stream-link-container">
+            <label for="streamLinkInput">Stream Link:</label>
+            <input type="text" id="streamLinkInput" placeholder="Enter Stream Link">
+            <button id="submitStreamLinkBtn" onclick="submitStreamLink()">Submit</button>
+        </div>
         <h1>Sariska Meet</h1>
 
         <video id="localVideo" autoplay></video>
@@ -32,7 +38,7 @@
             <button id="muteBtn" onclick="toggleMute()" disabled>Mute</button>
             <button id="videoBtn" onclick="toggleVideo()" disabled>Disable Video</button>
             <button id="messageBtn" onclick="toggleTextArea()">Message</button>
-            <button id="goLiveBtn" onclick="goLive()" disabled>Go Live</button>
+            <button id="goLiveBtn" onclick="stopLiveStreaming()" disabled>LiveStream</button>
         </div>
     </div>
     <div class="message-container" id="messageContainer" style="display: none;">
