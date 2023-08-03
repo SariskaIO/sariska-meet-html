@@ -6,12 +6,25 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    
     <div class="container">
+        <div class="api-key-container">
+            <label for="apiKeyInput">API Key:</label>
+            <input type="text" id="apiKeyInput" placeholder="Enter API key">
+            <button id="submitApiKeyBtn" onclick="submitApiKey()">Submit</button>
+        </div>
+        <br>
+        <div class="stream-link-container">
+            <label for="streamLinkInput">Stream Link:</label>
+            <input type="text" id="streamLinkInput" placeholder="Enter Stream Link">
+            <button id="submitStreamLinkBtn" onclick="submitStreamLink()">Submit</button>
+        </div>
         <h1>Sariska Meet</h1>
 
         <video id="localVideo" autoplay></video>
         <video id="screenShareVideo" autoplay></video>
         <video id="remoteVideo" autoplay></video>
+        <audio id="audioElement" autoplay></audio>
         <br>
         <div class="input-container">
             <label for="roomNameInput">Room Name:</label>
@@ -22,11 +35,31 @@
             <button id="startCallBtn" onclick="startCall()">Start Call</button>
             <button id="endCallBtn" onclick="endCall()" disabled>End Call</button>
             <button id="screenShareButton" onclick="toggleScreenSharing()" disabled>Screen Share</button>
+            <button id="muteBtn" onclick="toggleMute()" disabled>Mute</button>
+            <button id="videoBtn" onclick="toggleVideo()" disabled>Disable Video</button>
+            <button id="messageBtn" onclick="createSocketAndJoin(); toggleTextArea()">Message</button>
+            <button id="goLiveBtn" onclick="stopLiveStreaming()" disabled>LiveStream</button>
         </div>
     </div>
-    <script src="script.js"></script>
+    <div class="message-container" id="messageContainer" style="display: none;">
+        <div id="messageDisplay" class="message-display">
+        <!-- <div class="message-Bubble" id="messageBubble"></div> -->
+        </div>
+        <div class="input-container">
+            <textarea name="message" id="messageInput" placeholder="Type here"></textarea>
+            <button id="sendMessageBtn" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+    <div class="live-stream-container" style="display: none;">
+
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/phoenix@1.7.7/priv/static/phoenix.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
     <script src="https://sdk.sariska.io/bundle.messaging.js"></script>
     <script type="text/javascript" src="https://sdk.sariska.io/umd/sariska-media-transport.min.js"></script>
+    <script src="videoMeet.js"></script>  
+    <script src="liveStreaming.js"></script>  
+    <script src="messaging.js"></script>
 </body>
 
 </html>
